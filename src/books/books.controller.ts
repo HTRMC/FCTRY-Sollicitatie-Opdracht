@@ -8,9 +8,9 @@ export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Post()
-  async create(@Body() createBookDto: any): Promise<Book> {
-    return this.booksService.create(createBookDto);
-  }
+  async create(@Body() createBookDto: any | any[]): Promise<Book | Book[]> {
+      return this.booksService.create(createBookDto);
+   }
 
   @Get()
   async findAll(@Query('search') search?: string): Promise<Book[]> {
