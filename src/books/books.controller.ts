@@ -1,5 +1,5 @@
 // src/books/books.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { Book } from './schemas/book.schema';
 
@@ -13,8 +13,8 @@ export class BooksController {
   }
 
   @Get()
-  async findAll(): Promise<Book[]> {
-    return this.booksService.findAll();
+  async findAll(@Query('search') search?: string): Promise<Book[]> {
+   return this.booksService.findAll(search);
   }
 
   @Get(':isbn')

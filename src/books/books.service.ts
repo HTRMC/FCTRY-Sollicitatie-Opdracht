@@ -13,9 +13,30 @@ export class BooksService {
     return createdBook.save();
   }
 
-  async findAll(search: string): Promise<Book[]> {
-    return this.bookModel.find().exec();
-  }
+  async findAll(search?: string): Promise<Book[]> {
+   if (search) {
+      const searchQuery: { $or: any[] } = {
+         $or: [
+           { ISBN: { $regex: search, $options: 'i' } },
+           { title: { $regex: search, $options: 'i' } },
+           { author: { $regex: search, $options: 'i' } },
+           { summary: { $regex: search, $options: 'i' } },
+           {
+            $expr: {
+              $regexMatch: {
+                input: { $dateToString: { format: "%Y-%m-%d", date: "$publishedDate" } },
+                regex: search,
+                options: "i"
+              }
+            }
+          }
+        ]
+      };
+
+      return this.bookModel.find(searchQuery).exec();
+      }
+      return this.bookModel.find().exec();
+   }
 
   async findByISBN(ISBN: string): Promise<Book> {
     return this.bookModel.findOne({ ISBN }).exec();
