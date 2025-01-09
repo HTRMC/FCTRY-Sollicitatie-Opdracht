@@ -2,9 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { MongoExceptionFilter } from './common/filters/mongo-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
+    new MongoExceptionFilter()
+  );
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,                        // Strip properties that don't have decorators

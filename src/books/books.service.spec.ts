@@ -1,12 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { MongoError } from 'mongodb';
 import { BooksService } from './books.service';
 import { Book, BookDocument } from './schemas/book.schema';
+import { BookNotFoundException } from '../common/exceptions/book-not-found.exception';
 
 describe('BooksService', () => {
   let service: BooksService;
   let model: Model<BookDocument>;
+  let mockSave: jest.Mock;
 
   const mockBook = {
     ISBN: '978-3-16-148410-0',
@@ -16,13 +19,13 @@ describe('BooksService', () => {
     summary: 'Test Summary'
   };
 
-  // Mock class to handle both static and instance methods
+  mockSave = jest.fn().mockResolvedValue(mockBook);
   class MockBookModel {
     constructor(private data) {
       this.data = data;
     }
 
-    save = jest.fn().mockResolvedValue(this.data);
+    save = mockSave;
 
     static find = jest.fn().mockReturnValue({
       exec: jest.fn().mockResolvedValue([mockBook])
@@ -44,6 +47,7 @@ describe('BooksService', () => {
   }
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BooksService,
@@ -66,19 +70,26 @@ describe('BooksService', () => {
     it('should create a single book', async () => {
       const result = await service.create(mockBook);
       expect(result).toBeDefined();
-      if (result instanceof MockBookModel) {
-        expect(result.save).toHaveBeenCalled();
-      }
+      expect(mockSave).toHaveBeenCalled();
     });
 
     it('should create multiple books', async () => {
       const mockBooks = [mockBook, { ...mockBook, ISBN: '978-3-16-148410-1' }];
-      MockBookModel.insertMany.mockResolvedValueOnce(mockBooks);
-      
       const result = await service.create(mockBooks);
-      
+
       expect(MockBookModel.insertMany).toHaveBeenCalledWith(mockBooks);
-      expect(result).toEqual(mockBooks);
+      expect(result).toEqual([mockBook]);
+    });
+
+    it('should handle duplicate key error', async () => {
+      const duplicateError = new MongoError('Duplicate key error');
+      duplicateError.code = 11000;
+
+      mockSave.mockRejectedValueOnce(duplicateError);
+
+      await expect(service.create(mockBook))
+        .rejects
+        .toThrow(MongoError);
     });
   });
 
@@ -106,6 +117,16 @@ describe('BooksService', () => {
       expect(MockBookModel.findOne).toHaveBeenCalledWith({ ISBN: mockBook.ISBN });
       expect(result).toEqual(mockBook);
     });
+
+    it('should throw BookNotFoundException when book not found', async () => {
+      MockBookModel.findOne = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null)
+      });
+
+      await expect(service.findByISBN('nonexistent-isbn'))
+        .rejects
+        .toThrow(BookNotFoundException);
+    });
   });
 
   describe('update', () => {
@@ -120,6 +141,16 @@ describe('BooksService', () => {
       );
       expect(result).toEqual(mockBook);
     });
+
+    it('should throw BookNotFoundException when updating non-existent book', async () => {
+      MockBookModel.findOneAndUpdate = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null)
+      });
+
+      await expect(service.update('nonexistent-isbn', { title: 'New Title' }))
+        .rejects
+        .toThrow(BookNotFoundException);
+    });
   });
 
   describe('delete', () => {
@@ -128,6 +159,16 @@ describe('BooksService', () => {
       
       expect(MockBookModel.findOneAndDelete).toHaveBeenCalledWith({ ISBN: mockBook.ISBN });
       expect(result).toEqual(mockBook);
+    });
+
+    it('should throw BookNotFoundException when deleting non-existent book', async () => {
+      MockBookModel.findOneAndDelete = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null)
+      });
+
+      await expect(service.delete('nonexistent-isbn'))
+        .rejects
+        .toThrow(BookNotFoundException);
     });
   });
 });
