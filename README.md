@@ -113,6 +113,27 @@ Technologies and tools used:
    npm test
    ```
 
+#### Test Data
+```json
+{
+  "books": [
+    {
+      "title": "Harry Potter and the Philosopher's Stone",
+      "ISBN": "978-0-7475-3269-9",
+      "author": "J.K. Rowling",
+      "publishedDate": "1997-06-26"
+    },
+    {
+      "title": "The Great Gatsby",
+      "ISBN": "978-3-16-148410-0", 
+      "author": "F. Scott Fitzgerald",
+      "publishedDate": "2025-08-01"
+    }
+    // ... other books
+  ]
+}
+```
+
 ### Accessing the API
 - Swagger Documentation: [http://localhost:3000/api](http://localhost:3000/api)
 - API Endpoints: [http://localhost:3000/books](http://localhost:3000/books)
