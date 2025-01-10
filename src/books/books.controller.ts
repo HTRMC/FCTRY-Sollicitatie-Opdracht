@@ -1,6 +1,6 @@
 // src/books/books.controller.ts
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { BooksService } from './books.service';
 import { Book } from './schemas/book.schema';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -14,6 +14,11 @@ export class BooksController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new book' })
+  @ApiBody({ 
+    description: 'Book creation data', 
+    type: CreateBookDto,
+    isArray: true 
+  })
   @ApiResponse({ status: 201, description: 'The book has been successfully created.', type: Book })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   async create(@Body() createBookDto: CreateBookDto | CreateBookDto[]): Promise<Book | Book[]> {
