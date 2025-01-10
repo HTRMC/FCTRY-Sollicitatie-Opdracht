@@ -26,7 +26,7 @@ Validation rules include:
 ### 3. API Endpoints (books.controller.ts)
 Provides CRUD operations:
 - `POST /books`: Create book(s)
-- `GET /books`: List books (with optional search)
+- `GET /books`:  List books with optional search, like /books?search=harry&page=1&limit=10
 - `GET /books/:isbn`: Retrieve book by ISBN
 - `PUT /books/:isbn`: Update book
 - `DELETE /books/:isbn`: Delete book
