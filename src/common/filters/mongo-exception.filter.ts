@@ -3,6 +3,10 @@ import { Catch, ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { MongoError } from 'mongodb';
 import { Response } from 'express';
 
+/**
+* Filter to handle MongoDB specific exceptions
+* Maps MongoDB error codes to appropriate HTTP responses
+*/
 @Catch(MongoError)
 export class MongoExceptionFilter implements ExceptionFilter {
   catch(exception: MongoError, host: ArgumentsHost) {
@@ -12,6 +16,7 @@ export class MongoExceptionFilter implements ExceptionFilter {
     let status = 500;
     let message = 'Internal server error';
 
+    // Map MongoDB error codes to appropriate HTTP status codes and messages
     switch (exception.code) {
       case 11000: // Duplicate key error
         status = 409;

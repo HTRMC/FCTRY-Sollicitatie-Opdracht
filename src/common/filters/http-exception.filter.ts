@@ -2,6 +2,10 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
 import { Response } from 'express';
 
+/**
+* Global filter to handle all HTTP exceptions
+* Formats error responses with consistent structure
+*/
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {

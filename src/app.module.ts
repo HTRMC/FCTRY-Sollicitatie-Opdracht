@@ -2,8 +2,13 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BooksModule } from './books/books.module';
 
+/**
+* Root application module
+* Configures MongoDB connection and registers feature modules
+*/
 @Module({
   imports: [
+    // Configure MongoDB connection with event handling
     MongooseModule.forRoot('mongodb://mongodb:27017/bookstore', {
       connectionFactory: (connection) => {
         connection.on('connected', () => {
@@ -15,7 +20,7 @@ import { BooksModule } from './books/books.module';
         return connection;
       },
     }),
-    BooksModule,
+    BooksModule,  // Register books feature module
   ],
   controllers: [],
   providers: [],

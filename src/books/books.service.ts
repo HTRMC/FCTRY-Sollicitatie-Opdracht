@@ -6,10 +6,19 @@ import { Book, BookDocument } from './schemas/book.schema';
 import { BookNotFoundException } from '../common/exceptions/book-not-found.exception';
 import { PaginatedBooksDto } from './dto/paginated-books.dto';
 
+/**
+* Service handling book operations
+* Provides CRUD operations and search functionality for books
+*/
 @Injectable()
 export class BooksService {
    constructor(@InjectModel(Book.name) private bookModel: Model<BookDocument>) { }
 
+   /**
+    * Creates one or multiple books
+    * @param createBookDto Single book or array of books to create
+    * @returns Created book(s)
+    */
    async create(createBookDto: any | any[]): Promise<Book | Book[]> {
       try {
          if (Array.isArray(createBookDto)) {
@@ -22,6 +31,13 @@ export class BooksService {
       }
    }
 
+   /**
+    * Returns paginated list of books with optional search
+    * @param page Page number (default: 1)
+    * @param limit Items per page (default: 10, max: 100)
+    * @param search Optional search term to filter books
+    * @returns Paginated books with total count and page info
+    */
    async findAll(page: number = 1, limit: number = 10, search?: string): Promise<PaginatedBooksDto> {
       try {
          // Ensure page and limit are positive
@@ -69,6 +85,11 @@ export class BooksService {
       }
    }
 
+   /**
+    * Finds a book by its ISBN
+    * @param ISBN Book's ISBN to search for
+    * @returns Found book or throws BookNotFoundException
+    */
    async findByISBN(ISBN: string): Promise<Book> {
       const book = await this.bookModel.findOne({ ISBN }).exec();
       if (!book) {
@@ -77,6 +98,12 @@ export class BooksService {
       return book;
    }
 
+   /**
+    * Updates a book by ISBN
+    * @param ISBN Book's ISBN to update
+    * @param updateBookDto Updated book data
+    * @returns Updated book or throws BookNotFoundException
+    */
    async update(ISBN: string, updateBookDto: any): Promise<Book> {
       const updatedBook = await this.bookModel.findOneAndUpdate({ ISBN }, updateBookDto, { new: true }).exec();
       if (!updatedBook) {
@@ -85,6 +112,11 @@ export class BooksService {
       return updatedBook;
    }
 
+   /**
+    * Deletes a book by ISBN
+    * @param ISBN Book's ISBN to delete
+    * @returns Deleted book or throws BookNotFoundException
+    */
    async delete(ISBN: string): Promise<Book> {
       const deletedBook = await this.bookModel.findOneAndDelete({ ISBN }).exec();
       if (!deletedBook) {

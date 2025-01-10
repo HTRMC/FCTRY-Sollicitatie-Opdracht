@@ -11,6 +11,7 @@ describe('BooksService', () => {
   let model: Model<BookDocument>;
   let mockSave: jest.Mock;
 
+  // Test data used across test cases
   const mockBook = {
     ISBN: '978-3-16-148410-0',
     title: 'Test Book',
@@ -19,7 +20,13 @@ describe('BooksService', () => {
     summary: 'Test Summary'
   };
 
+  // Mock save method separately to allow modifying its behavior
   mockSave = jest.fn().mockResolvedValue(mockBook);
+
+  /**
+ * Mock Mongoose Model implementation
+ * Includes both instance methods (save) and static methods (find, findOne, etc)
+ */
   class MockBookModel {
     constructor(private data) {
       this.data = data;
@@ -48,6 +55,7 @@ describe('BooksService', () => {
     static countDocuments = jest.fn().mockResolvedValue(1);
   }
 
+  // Reset mocks and set up test module before each test
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
@@ -69,12 +77,14 @@ describe('BooksService', () => {
   });
 
   describe('create', () => {
+    // Test single book creation success case
     it('should create a single book', async () => {
       const result = await service.create(mockBook);
       expect(result).toBeDefined();
       expect(mockSave).toHaveBeenCalled();
     });
 
+    // Test bulk book creation
     it('should create multiple books', async () => {
       const mockBooks = [mockBook, { ...mockBook, ISBN: '978-3-16-148410-1' }];
       const result = await service.create(mockBooks);
@@ -83,6 +93,7 @@ describe('BooksService', () => {
       expect(result).toEqual([mockBook]);
     });
 
+    // Test duplicate ISBN error handling
     it('should handle duplicate key error', async () => {
       const duplicateError = new MongoError('Duplicate key error');
       duplicateError.code = 11000;
@@ -96,20 +107,20 @@ describe('BooksService', () => {
   });
 
   describe('findAll', () => {
+    // Test pagination without search parameters
     it('should return paginated books when no search param', async () => {
-      // Mock countDocuments and find
       MockBookModel.countDocuments = jest.fn().mockResolvedValue(1);
       MockBookModel.find = jest.fn().mockReturnValue({
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue([mockBook]),
       });
-  
+
       const page = 1;
       const limit = 10;
-  
+
       const result = await service.findAll(page, limit);
-  
+
       expect(MockBookModel.countDocuments).toHaveBeenCalledWith({});
       expect(MockBookModel.find).toHaveBeenCalledWith({});
       expect(result).toEqual({
@@ -120,20 +131,21 @@ describe('BooksService', () => {
         totalPages: 1,
       });
     });
-  
+
+    // Test search functionality with pagination
     it('should return paginated books with search param', async () => {
-      // Mock countDocuments and find
       MockBookModel.countDocuments = jest.fn().mockResolvedValue(1);
       MockBookModel.find = jest.fn().mockReturnValue({
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue([mockBook]),
       });
-  
+
       const page = 1;
       const limit = 10;
       const search = 'Test';
-  
+
+      // Expected MongoDB search query
       const searchQuery = {
         $or: [
           { ISBN: { $regex: search, $options: 'i' } },
@@ -151,9 +163,9 @@ describe('BooksService', () => {
           },
         ],
       };
-  
+
       const result = await service.findAll(page, limit, search);
-  
+
       expect(MockBookModel.countDocuments).toHaveBeenCalledWith(searchQuery);
       expect(MockBookModel.find).toHaveBeenCalledWith(searchQuery);
       expect(result).toEqual({
@@ -165,16 +177,18 @@ describe('BooksService', () => {
       });
     });
   });
-  
+
 
   describe('findByISBN', () => {
+    // Test successful book retrieval
     it('should return a book by ISBN', async () => {
       const result = await service.findByISBN(mockBook.ISBN);
-      
+
       expect(MockBookModel.findOne).toHaveBeenCalledWith({ ISBN: mockBook.ISBN });
       expect(result).toEqual(mockBook);
     });
 
+    // Test book not found error
     it('should throw BookNotFoundException when book not found', async () => {
       MockBookModel.findOne = jest.fn().mockReturnValue({
         exec: jest.fn().mockResolvedValue(null)
@@ -187,10 +201,11 @@ describe('BooksService', () => {
   });
 
   describe('update', () => {
+    // Test successful book update
     it('should update a book', async () => {
       const updateDto = { title: 'Updated Title' };
       const result = await service.update(mockBook.ISBN, updateDto);
-      
+
       expect(MockBookModel.findOneAndUpdate).toHaveBeenCalledWith(
         { ISBN: mockBook.ISBN },
         updateDto,
@@ -199,6 +214,7 @@ describe('BooksService', () => {
       expect(result).toEqual(mockBook);
     });
 
+    // Test update book not found error
     it('should throw BookNotFoundException when updating non-existent book', async () => {
       MockBookModel.findOneAndUpdate = jest.fn().mockReturnValue({
         exec: jest.fn().mockResolvedValue(null)
@@ -211,13 +227,15 @@ describe('BooksService', () => {
   });
 
   describe('delete', () => {
+    // Test successful book deletion
     it('should delete a book', async () => {
       const result = await service.delete(mockBook.ISBN);
-      
+
       expect(MockBookModel.findOneAndDelete).toHaveBeenCalledWith({ ISBN: mockBook.ISBN });
       expect(result).toEqual(mockBook);
     });
 
+    // Test delete book not found error
     it('should throw BookNotFoundException when deleting non-existent book', async () => {
       MockBookModel.findOneAndDelete = jest.fn().mockReturnValue({
         exec: jest.fn().mockResolvedValue(null)
