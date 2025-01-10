@@ -1,10 +1,11 @@
 // src/books/books.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { BooksService } from './books.service';
 import { Book } from './schemas/book.schema';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { PaginatedBooksDto } from './dto/paginated-books.dto';
 
 @ApiTags('books')
 @Controller('books')
@@ -16,15 +17,21 @@ export class BooksController {
   @ApiResponse({ status: 201, description: 'The book has been successfully created.', type: Book })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   async create(@Body() createBookDto: CreateBookDto | CreateBookDto[]): Promise<Book | Book[]> {
-      return this.booksService.create(createBookDto);
-   }
+    return this.booksService.create(createBookDto);
+  }
 
   @Get()
-  @ApiOperation({ summary: 'Get all books' })
+  @ApiOperation({ summary: 'Get paginated books with optional search' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page' })
   @ApiQuery({ name: 'search', required: false, description: 'Search term to filter books', type: String })
-  @ApiResponse({ status: 200, description: 'Return all books.', type: [Book] })
-  async findAll(@Query('search') search?: string): Promise<Book[]> {
-   return this.booksService.findAll(search);
+  @ApiResponse({ status: 200, description: 'Return paginated books.', type: PaginatedBooksDto })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search?: string,
+  ): Promise<PaginatedBooksDto> {
+    return this.booksService.findAll(page, limit, search);
   }
 
   @Get(':isbn')
@@ -53,4 +60,4 @@ export class BooksController {
   async delete(@Param('isbn') ISBN: string): Promise<Book> {
     return this.booksService.delete(ISBN);
   }
-} 
+}

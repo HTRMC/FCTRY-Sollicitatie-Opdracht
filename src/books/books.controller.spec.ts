@@ -41,6 +41,8 @@ describe('BooksService', () => {
     });
 
     static insertMany = jest.fn().mockResolvedValue([mockBook]);
+
+    static countDocuments = jest.fn().mockResolvedValue(1);
   }
 
   beforeEach(async () => {
@@ -81,22 +83,92 @@ describe('BooksService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all books when no search param', async () => {
-      const result = await service.findAll();
-      
+    it('should return paginated books when no search param is provided', async () => {
+      const page = 1;
+      const limit = 10;
+      const total = 1;
+      const totalPages = Math.ceil(total / limit);
+  
+      MockBookModel.countDocuments.mockResolvedValueOnce(total); // Mock countDocuments
+      MockBookModel.find.mockReturnValueOnce({
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([mockBook]), // Mock find
+      });
+  
+      const result = await service.findAll(page, limit);
+  
+      expect(MockBookModel.countDocuments).toHaveBeenCalled();
       expect(MockBookModel.find).toHaveBeenCalled();
-      expect(result).toEqual([mockBook]);
+      expect(result).toEqual({
+        books: [mockBook],
+        total,
+        page,
+        limit,
+        totalPages,
+      });
     });
-
-    it('should return filtered books when search param provided', async () => {
+  
+    it('should return filtered books when a search param is provided', async () => {
+      const page = 1;
+      const limit = 10;
       const search = 'test';
-      const result = await service.findAll(search);
-      
-      expect(MockBookModel.find).toHaveBeenCalled();
-      expect(result).toEqual([mockBook]);
+      const total = 1;
+      const totalPages = Math.ceil(total / limit);
+  
+      MockBookModel.countDocuments.mockResolvedValueOnce(total); // Mock countDocuments
+      MockBookModel.find.mockReturnValueOnce({
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([mockBook]), // Mock find with filters
+      });
+  
+      const result = await service.findAll(page, limit, search);
+  
+      expect(MockBookModel.countDocuments).toHaveBeenCalledWith({
+        $or: [
+          { ISBN: { $regex: search, $options: 'i' } },
+          { title: { $regex: search, $options: 'i' } },
+          { author: { $regex: search, $options: 'i' } },
+          { summary: { $regex: search, $options: 'i' } },
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $dateToString: { format: '%Y-%m-%d', date: '$publishedDate' } },
+                regex: search,
+                options: 'i',
+              },
+            },
+          },
+        ],
+      });
+      expect(MockBookModel.find).toHaveBeenCalledWith({
+        $or: [
+          { ISBN: { $regex: search, $options: 'i' } },
+          { title: { $regex: search, $options: 'i' } },
+          { author: { $regex: search, $options: 'i' } },
+          { summary: { $regex: search, $options: 'i' } },
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $dateToString: { format: '%Y-%m-%d', date: '$publishedDate' } },
+                regex: search,
+                options: 'i',
+              },
+            },
+          },
+        ],
+      });
+      expect(result).toEqual({
+        books: [mockBook],
+        total,
+        page,
+        limit,
+        totalPages,
+      });
     });
-  });
-
+  });  
+  
   describe('findByISBN', () => {
     it('should return a book by ISBN', async () => {
       const result = await service.findByISBN(mockBook.ISBN);

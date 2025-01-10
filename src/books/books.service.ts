@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Book, BookDocument } from './schemas/book.schema';
 import { BookNotFoundException } from '../common/exceptions/book-not-found.exception';
+import { PaginatedBooksDto } from './dto/paginated-books.dto';
 
 @Injectable()
 export class BooksService {
@@ -21,30 +22,48 @@ export class BooksService {
       }
    }
 
-   async findAll(search?: string): Promise<Book[]> {
+   async findAll(page: number = 1, limit: number = 10, search?: string): Promise<PaginatedBooksDto> {
       try {
+         // Ensure page and limit are positive
+         page = Math.max(1, page);
+         limit = Math.max(1, Math.min(limit, 100)); // Max 100 items per page
+         const skip = (page - 1) * limit;
+
+         // Build search query
+         const searchQuery: { $or?: any[] } = {};
          if (search) {
-            const searchQuery: { $or: any[] } = {
-               $or: [
-                  { ISBN: { $regex: search, $options: 'i' } },
-                  { title: { $regex: search, $options: 'i' } },
-                  { author: { $regex: search, $options: 'i' } },
-                  { summary: { $regex: search, $options: 'i' } },
-                  {
-                     $expr: {
-                        $regexMatch: {
-                           input: { $dateToString: { format: "%Y-%m-%d", date: "$publishedDate" } },
-                           regex: search,
-                           options: "i"
-                        }
+            searchQuery.$or = [
+               { ISBN: { $regex: search, $options: 'i' } },
+               { title: { $regex: search, $options: 'i' } },
+               { author: { $regex: search, $options: 'i' } },
+               { summary: { $regex: search, $options: 'i' } },
+               {
+                  $expr: {
+                     $regexMatch: {
+                        input: { $dateToString: { format: "%Y-%m-%d", date: "$publishedDate" } },
+                        regex: search,
+                        options: "i"
                      }
                   }
-               ]
-            };
-
-            return await this.bookModel.find(searchQuery).exec();
+               }
+            ];
          }
-         return await this.bookModel.find().exec();
+
+         // Execute queries
+         const total = await this.bookModel.countDocuments(searchQuery);
+         const books = await this.bookModel
+            .find(searchQuery)
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+         return {
+            books,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+         };
       } catch (error) {
          throw error;
       }
