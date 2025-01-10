@@ -116,23 +116,57 @@ Technologies and tools used:
 #### Test Data
 Postman or curl is recommended for doing the POST, GET, PUT & DELETE request
 ```json
-{
-  "books": [
-    {
-      "title": "Harry Potter and the Philosopher's Stone",
-      "ISBN": "978-0-7475-3269-9",
-      "author": "J.K. Rowling",
-      "publishedDate": "1997-06-26"
-    },
-    {
-      "title": "The Great Gatsby",
-      "ISBN": "978-3-16-148410-0", 
-      "author": "F. Scott Fitzgerald",
-      "publishedDate": "2025-08-01"
-    }
-    // ... other books
-  ]
-}
+[
+  {
+    "ISBN": "978-0-7475-3269-9",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "author": "J.K. Rowling",
+    "publishedDate": "1997-06-26",
+    "summary": "Harry Potter's journey begins as he discovers he is a wizard and attends Hogwarts School of Witchcraft and Wizardry."
+  },
+  {
+    "ISBN": "978-0-7475-3849-3",
+    "title": "Harry Potter and the Chamber of Secrets",
+    "author": "J.K. Rowling",
+    "publishedDate": "1998-07-02",
+    "summary": "In Harry's second year at Hogwarts, students are being petrified and a mysterious Chamber of Secrets has been opened."
+  },
+  {
+    "ISBN": "978-0-7475-4215-5",
+    "title": "Harry Potter and the Prisoner of Azkaban",
+    "author": "J.K. Rowling",
+    "publishedDate": "1999-07-08",
+    "summary": "Harry learns about escaped prisoner Sirius Black and the dark truth about his parents' betrayal."
+  },
+  {
+    "ISBN": "978-0-7475-4624-5",
+    "title": "Harry Potter and the Goblet of Fire",
+    "author": "J.K. Rowling",
+    "publishedDate": "2000-07-08",
+    "summary": "Harry is mysteriously entered into the dangerous Triwizard Tournament as dark forces gather strength."
+  },
+  {
+    "ISBN": "978-0-7475-5100-3",
+    "title": "Harry Potter and the Order of the Phoenix",
+    "author": "J.K. Rowling",
+    "publishedDate": "2003-06-21",
+    "summary": "Harry and his friends form 'Dumbledore's Army' to prepare for the coming war with Voldemort."
+  },
+  {
+    "ISBN": "978-0-7475-8108-7",
+    "title": "Harry Potter and the Half-Blood Prince",
+    "author": "J.K. Rowling",
+    "publishedDate": "2005-07-16",
+    "summary": "Dumbledore begins to prepare Harry for his final battle with Voldemort by revealing the dark lord's past."
+  },
+  {
+    "ISBN": "978-0-545-01022-1",
+    "title": "Harry Potter and the Deathly Hallows",
+    "author": "J.K. Rowling",
+    "publishedDate": "2007-07-21",
+    "summary": "The final battle for Hogwarts commences as Harry hunts for the remaining Horcruxes to defeat Voldemort."
+  }
+]
 ```
 
 ### Accessing the API
