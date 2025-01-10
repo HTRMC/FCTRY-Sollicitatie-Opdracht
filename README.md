@@ -114,6 +114,7 @@ Technologies and tools used:
    ```
 
 #### Test Data
+Postman or curl is recommended for doing the POST, GET, PUT & DELETE request
 ```json
 {
   "books": [
